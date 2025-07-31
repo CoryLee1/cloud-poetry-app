@@ -1,0 +1,453 @@
+.screen {
+  background-color: transparent;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  width: 100%;
+}
+
+.screen .overlap-wrapper {
+  overflow: hidden;
+  border: 10px solid;
+  border-color: transparent;
+  background: linear-gradient(
+      0deg,
+      rgba(243, 243, 247, 1) 0%,
+      rgba(243, 243, 247, 1) 100%
+    ),
+    linear-gradient(
+      0deg,
+      rgba(196, 226, 255, 1) 0%,
+      rgba(196, 226, 255, 1) 100%
+    );
+  width: 375px;
+  height: 812px;
+}
+
+.screen .overlap {
+  position: relative;
+  height: 812px;
+}
+
+.screen .cloud-layer {
+  position: absolute;
+  width: 375px;
+  height: 801px;
+  top: 0;
+  left: 0;
+  object-fit: cover;
+  z-index: 0;
+}
+
+/* Three.js Canvas 样式 - 最底层背景 */
+#three-canvas {
+  position: absolute;
+  width: 375px;
+  height: 801px;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  pointer-events: none; /* 禁用鼠标交互，让它纯作为背景 */
+}
+
+.screen .vector {
+  position: absolute;
+  width: 375px;
+  height: 509px;
+  top: 303px;
+  left: 0;
+  z-index: 2;
+}
+
+.screen .img {
+  position: absolute;
+  width: 375px;
+  height: 569px;
+  top: 243px;
+  left: 0;
+  z-index: 2;
+}
+
+.screen .home-indicator {
+  position: absolute;
+  width: 375px;
+  height: 32px;
+  top: 780px;
+  left: 0;
+  z-index: 3;
+}
+
+.screen .div {
+  position: relative;
+  width: 128px;
+  height: 5px;
+  top: 20px;
+  left: 123px;
+  background-color: #000000;
+  border-radius: 95.31px;
+}
+
+.screen .frame {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  position: absolute;
+  top: 506px;
+  left: 39px;
+  z-index: 3;
+}
+
+.screen .frame-2 {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.screen .HI-IVY {
+  position: relative;
+  width: fit-content;
+  margin-top: -1.00px;
+  font-family: "SF Pro-Semibold", Helvetica;
+  font-weight: 400;
+  color: #ffffff;
+  font-size: 26px;
+  letter-spacing: 0;
+  line-height: 34.5px;
+  white-space: nowrap;
+}
+
+.screen .text-wrapper {
+  width: fit-content;
+  font-family: "PingFang SC-Semibold", Helvetica;
+  font-size: 26px;
+  text-align: center;
+  line-height: 34.5px;
+  white-space: nowrap;
+  position: relative;
+  font-weight: 400;
+  color: #ffffff;
+  letter-spacing: 0;
+}
+
+.screen .element {
+  width: 204px;
+  height: 48px;
+  font-family: "PingFang SC-Regular", Helvetica;
+  font-size: 10px;
+  line-height: 16px;
+  position: relative;
+  font-weight: 400;
+  color: #ffffff;
+  letter-spacing: 0;
+}
+
+.screen .frame-3 {
+  display: flex;
+  flex-direction: column;
+  width: 375px;
+  align-items: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.screen .status-bar {
+  display: flex;
+  height: 56px;
+  align-items: flex-end;
+  justify-content: center;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+}
+
+.screen .left-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7.63px;
+  padding: 0px 0px 2.86px 9.54px;
+  position: relative;
+  flex: 1;
+  align-self: stretch;
+  flex-grow: 1;
+}
+
+.screen .statusbar-time {
+  position: relative;
+  width: 51.53px;
+  height: 20.04px;
+  border-radius: 22.9px;
+}
+
+.screen .time {
+  position: absolute;
+  width: 51px;
+  top: 0;
+  left: 0;
+  font-family: "SF Pro Text-Semibold", Helvetica;
+  font-weight: 400;
+  color: var(--label-colordarkprimary);
+  font-size: 15.3px;
+  text-align: center;
+  letter-spacing: -0.31px;
+  line-height: 20.0px;
+  white-space: nowrap;
+}
+
+.screen .dynamic-island {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  align-self: stretch;
+  flex: 0 0 auto;
+}
+
+.screen .statusbar {
+  position: relative;
+  width: 119.27px;
+  height: 35.31px;
+  background-color: var(--system-backgrounddark-baseprimary);
+  border-radius: 95.42px;
+}
+
+.screen .truedepth-camera {
+  position: absolute;
+  width: 76px;
+  height: 35px;
+  top: 0;
+  left: 0;
+  background-color: var(--system-backgrounddark-baseprimary);
+  border-radius: 95.42px;
+}
+
+.screen .facetime-camera {
+  position: absolute;
+  width: 35px;
+  height: 35px;
+  top: 0;
+  left: 84px;
+  background-color: var(--system-backgrounddark-baseprimary);
+  border-radius: 95.42px;
+}
+
+.screen .right-side {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7.63px;
+  padding: 0px 10.5px 0px 0px;
+  position: relative;
+  flex: 1;
+  align-self: stretch;
+  flex-grow: 1;
+}
+
+.screen .signal-wifi-battery {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 7.63px;
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.screen .icon-mobile-signal {
+  position: relative;
+  width: 17.18px;
+  height: 11.45px;
+}
+
+.screen .wifi {
+  position: relative;
+  width: 16.22px;
+  height: 11.29px;
+}
+
+.screen .statusbar-battery {
+  position: relative;
+  width: 26.15px;
+  height: 12.4px;
+}
+
+.screen .frame-4 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 71px;
+  padding: 16px;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+.screen .frame-5 {
+  position: relative;
+  width: 32px;
+  height: 32px;
+}
+
+.screen .vector-2 {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  top: 6px;
+  left: 12px;
+}
+
+.screen .vector-3 {
+  position: absolute;
+  width: 18px;
+  height: 11px;
+  top: 16px;
+  left: 7px;
+}
+
+.screen .element-2 {
+  position: relative;
+  width: fit-content;
+  opacity: 0.8;
+  font-family: "SF Pro-Medium", Helvetica;
+  font-weight: 500;
+  color: #ffffff;
+  font-size: 14px;
+  text-align: center;
+  letter-spacing: 0;
+  line-height: 15.5px;
+  white-space: nowrap;
+}
+
+.screen .overlap-group {
+  position: relative;
+  width: 25px;
+  height: 17px;
+  top: 8px;
+  left: 4px;
+}
+
+.screen .rectangle {
+  position: absolute;
+  width: 19px;
+  height: 17px;
+  top: 0;
+  left: 3px;
+  border-radius: 4px;
+  border: 3px solid;
+  border-color: #ffffff;
+}
+
+.screen .vector-4 {
+  position: absolute;
+  width: 9px;
+  height: 3px;
+  top: 5px;
+  left: 8px;
+}
+
+.screen .vector-5 {
+  position: absolute;
+  width: 5px;
+  height: 3px;
+  top: 7px;
+  left: 0;
+}
+
+.screen .vector-6 {
+  position: absolute;
+  width: 5px;
+  height: 3px;
+  top: 7px;
+  left: 20px;
+}
+
+.screen .vector-7 {
+  position: absolute;
+  width: 9px;
+  height: 3px;
+  top: 9px;
+  left: 8px;
+}
+
+.screen .frame-6 {
+  display: flex;
+  width: 335px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 12px 12px 21px;
+  position: absolute;
+  top: 695px;
+  left: 20px;
+  background-color: #0000004c;
+  border-radius: 40px;
+  backdrop-filter: blur(25px) brightness(100%);
+  -webkit-backdrop-filter: blur(25px) brightness(100%);
+}
+
+.screen .frame-7 {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.screen .text-wrapper-2 {
+  position: relative;
+  width: fit-content;
+  margin-top: -1.00px;
+  font-family: "PingFang SC-Semibold", Helvetica;
+  font-weight: 400;
+  color: #ffffff;
+  font-size: 14px;
+  text-align: center;
+  letter-spacing: 0;
+  line-height: 22px;
+  white-space: nowrap;
+}
+
+.screen .view {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  background-color: #000000;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.screen .vector-8 {
+  position: absolute;
+  width: 3px;
+  height: 19px;
+  top: 10px;
+  left: 16px;
+}
+
+.screen .vector-9 {
+  position: absolute;
+  width: 3px;
+  height: 13px;
+  top: 14px;
+  left: 20px;
+}
+
+.screen .vector-10 {
+  position: absolute;
+  width: 3px;
+  height: 7px;
+  top: 16px;
+  left: 26px;
+}
+
+.screen .vector-11 {
+  position: absolute;
+  width: 3px;
+  height: 7px;
+  top: 16px;
+  left: 10px;
+}

@@ -1,0 +1,48 @@
+@import url("https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css");
+* {
+  -webkit-font-smoothing: antialiased;
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0px;
+  height: 100%;
+}
+/* a blue color as a generic focus style */
+button:focus-visible {
+  outline: 2px solid #4a90e2 !important;
+  outline: -webkit-focus-ring-color auto 5px !important;
+}
+a {
+  text-decoration: none;
+}
+
+@font-face {
+  font-family: "SF Pro-Semibold";
+  src: url("https://anima-uploads.s3.amazonaws.com/projects/64f035e70ffb37c7c0f32912/fonts/sf-pro.ttf")
+    format("truetype");
+}
+
+@font-face {
+  font-family: "PingFang SC-Semibold";
+  src: url("https://anima-uploads.s3.amazonaws.com/projects/676018d9c0207c4d3efc3122/fonts/pingfang-semibold.ttf")
+    format("truetype");
+}
+
+@font-face {
+  font-family: "PingFang SC-Regular";
+  src: url("https://anima-uploads.s3.amazonaws.com/projects/67b30169aed773c9779511bd/fonts/notosanssc-variablefont_wght.ttf")
+    format("truetype");
+}
+
+@font-face {
+  font-family: "SF Pro Text-Semibold";
+  src: url("https://anima-uploads.s3.amazonaws.com/projects/65b92b4b6fc441ea8a246f8e/fonts/century-gothic.ttf")
+    format("truetype");
+}
+
+@font-face {
+  font-family: "SF Pro-Medium";
+  src: url("https://anima-uploads.s3.amazonaws.com/5f0f0fe71911555ed50ab8f4/SF-Pro.ttf")
+    format("truetype");
+}
