@@ -63,7 +63,14 @@
             </div>
           </div>
           <div class="frame-6">
-            <div class="frame-7"><div class="text-wrapper-2">现在的你，是什么感觉呢？</div></div>
+            <div class="frame-7">
+              <input 
+                type="text" 
+                class="text-wrapper-2 input-field" 
+                placeholder="现在的你，是什么感觉呢？" 
+                value=""
+              />
+            </div>
             <div class="view">
               <img class="vector-8" src="img/vector-2.svg" />
               <img class="vector-9" src="img/vector-3.svg" />
@@ -111,6 +118,13 @@
 
             camera = new THREE.PerspectiveCamera(60, 375 / 801, 0.1, 100);
             camera.position.set(0, 0, 1.5);
+
+            // 添加OrbitControls - 让云朵可以交互
+            const controls = new OrbitControls(camera, canvas);
+            controls.enableZoom = false; // 禁用缩放
+            controls.enablePan = false;  // 禁用平移
+            controls.enableDamping = true; // 启用阻尼效果
+            controls.dampingFactor = 0.05;
 
             // 添加天空球
             const skyCanvas = document.createElement('canvas');
@@ -301,6 +315,120 @@
             mesh.rotation.y = -performance.now() / 7500;
             mesh.material.uniforms.frame.value++;
             renderer.render(scene, camera);
+        }
+    </script>
+
+    <!-- API交互脚本 -->
+    <script>
+        // 获取元素
+        const inputField = document.querySelector('.input-field');
+        const voiceButton = document.querySelector('.view');
+        let mediaRecorder = null;
+        let audioChunks = [];
+
+        // 文本输入处理
+        inputField.addEventListener('keypress', async (e) => {
+            if (e.key === 'Enter') {
+                const mood = inputField.value.trim();
+                if (mood) {
+                    await generatePoetry(mood);
+                }
+            }
+        });
+
+        // 语音按钮处理
+        voiceButton.addEventListener('click', async () => {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                // 停止录音
+                mediaRecorder.stop();
+                voiceButton.style.backgroundColor = '#000000';
+            } else {
+                // 开始录音
+                await startRecording();
+                voiceButton.style.backgroundColor = '#ff4444';
+            }
+        });
+
+        // 生成诗歌
+        async function generatePoetry(mood) {
+            try {
+                console.log('正在生成诗歌...', mood);
+                
+                const response = await fetch('/api/generate-poetry', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ mood })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    console.log('诗歌生成成功:', data.poetry);
+                    // 这里可以显示诗歌，或者进入游戏模式
+                    alert(`诗歌生成成功！\n\n${data.poetry}`);
+                } else {
+                    console.error('生成诗歌失败:', data.error);
+                    alert('生成诗歌失败: ' + data.error);
+                }
+            } catch (error) {
+                console.error('API调用错误:', error);
+                alert('网络错误，请重试');
+            }
+        }
+
+        // 开始录音
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    await sendAudioToServer(audioBlob);
+                    stream.getTracks().forEach(track => track.stop());
+                };
+
+                mediaRecorder.start();
+                console.log('开始录音...');
+            } catch (error) {
+                console.error('录音失败:', error);
+                alert('无法访问麦克风，请检查权限设置');
+            }
+        }
+
+        // 发送音频到服务器
+        async function sendAudioToServer(audioBlob) {
+            try {
+                const formData = new FormData();
+                formData.append('audio', audioBlob, 'recording.wav');
+
+                const response = await fetch('/api/speech-to-text', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    console.log('语音识别成功:', data.text);
+                    inputField.value = data.text;
+                    // 自动生成诗歌
+                    await generatePoetry(data.text);
+                } else {
+                    console.error('语音识别失败:', data.error);
+                    alert('语音识别失败: ' + data.error);
+                }
+            } catch (error) {
+                console.error('发送音频失败:', error);
+                alert('网络错误，请重试');
+            }
         }
     </script>
   </body>
