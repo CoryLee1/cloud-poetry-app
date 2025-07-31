@@ -328,7 +328,7 @@ html, body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 7.63px;
+  gap: 4px;
   padding: 0px 0px 2.86px 9.54px;
   position: relative;
   flex: 1;
@@ -338,9 +338,10 @@ html, body {
 
 .screen .statusbar-time {
   position: relative;
-  width: 51.53px;
+  width: 45px;
   height: 20.04px;
   border-radius: 22.9px;
+  left:5px;
 }
 
 .screen .time {
@@ -350,7 +351,7 @@ html, body {
   left: 0;
   font-family: "SF Pro Text-Semibold", Helvetica;
   font-weight: 400;
-  color: var(--label-colordarkprimary);
+  color: #ffffff; /* 改回白色 */
   font-size: 15.3px;
   text-align: center;
   letter-spacing: -0.31px;
@@ -654,13 +655,4 @@ html, body {
   height: 100%;
   object-fit: cover;
   border-radius: 0;
-}
-
-.intensity-value {
-  color: #ffffff;
-  font-family: "PingFang SC", Helvetica;
-  font-size: 11px;
-  text-align: center;
-  margin-top: 5px;
-  opacity: 0.8;
 }

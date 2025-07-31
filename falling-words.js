@@ -17,8 +17,8 @@ class FallingWord {
     update() {
         if (!this.isFixed) {
             this.y += this.speed;
-            // 如果超出屏幕底部，重置到顶部
-            if (this.y > height + 50) {
+            // 如果超出屏幕底部，重置到顶部（只有在活动状态下）
+            if (this.y > height + 50 && isActive) {
                 this.y = -50;
                 this.x = random(50, width - 50);
             }
@@ -101,8 +101,8 @@ function setup() {
     canvas.style('position', 'absolute');
     canvas.style('top', '0');
     canvas.style('left', '0');
-    canvas.style('z-index', '5'); // 在Three.js之上，UI之下
-    canvas.style('pointer-events', 'none'); // 不影响Three.js交互
+    canvas.style('z-index', '6'); // 在生成的图片之上，但在UI之下
+    canvas.style('pointer-events', 'none'); // 不影响UI交互
     canvas.style('background', 'transparent'); // 透明背景
     
     // 设置字体为细体
@@ -113,15 +113,10 @@ function setup() {
 }
 
 function draw() {
-    if (!isActive) {
-        clear();
-        return;
-    }
-
     // 完全透明背景，让所有内容可见
     clear();
     
-    // 更新和显示所有单词
+    // 更新和显示所有单词（包括已固定的）
     for (let word of fallingWords) {
         word.update();
         word.display();
@@ -170,6 +165,17 @@ function startFallingWords(poetry) {
 
 // 停止效果
 function stopFallingWords() {
+    // 停止下新词，但保留已固定的词
+    isActive = false;
+    
+    // 移除事件监听器
+    document.removeEventListener('click', handleGlobalClick);
+    
+    console.log('停止下新词，保留已固定的词');
+}
+
+// 完全停止效果（移除所有词）
+function stopFallingWordsCompletely() {
     isActive = false;
     fallingWords = [];
     
@@ -210,4 +216,5 @@ function splitPoetry(poetry) {
 
 // 导出函数供外部调用
 window.startFallingWords = startFallingWords;
-window.stopFallingWords = stopFallingWords; 
+window.stopFallingWords = stopFallingWords;
+window.stopFallingWordsCompletely = stopFallingWordsCompletely; 

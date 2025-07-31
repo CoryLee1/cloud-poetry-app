@@ -380,15 +380,18 @@
                 imageElement.style.opacity = '1';
             }, 100);
             
-            // 同时显示诗歌
+            // 隐藏poetry display，让p5.js效果直接显示在图片上
             const poetryDisplay = document.querySelector('.poetry-display');
             if (poetryDisplay) {
-                poetryDisplay.style.display = 'block';
-                poetryDisplay.style.opacity = '0';
-                setTimeout(() => {
-                    poetryDisplay.style.opacity = '1';
-                }, 500); // 图片显示后0.5秒显示诗歌
+                poetryDisplay.style.display = 'none';
             }
+
+            // 图片显示后停止p5.js下新词，只保留已固定的词
+            setTimeout(() => {
+                if (window.stopFallingWords) {
+                    window.stopFallingWords();
+                }
+            }, 1000); // 图片显示1秒后停止下新词
         }
 
         // 显示诗歌
@@ -413,12 +416,15 @@
             // 添加到.overlap容器内部，确保在iPhone屏幕框架内
             overlapContainer.appendChild(poetryDisplay);
 
-            // 启动p5.js诗歌落下效果，延迟更长时间让诗歌先显示
+            // 保存诗歌内容供后续使用
+            window.currentPoetry = poetry;
+            
+            // 立即启动p5.js诗歌落下效果
             setTimeout(() => {
                 if (window.startFallingWords) {
                     window.startFallingWords(poetry);
                 }
-            }, 3000); // 3秒后开始落下效果，让用户先看到诗歌
+            }, 500); // 0.5秒后开始落下效果
         }
 
         // 开始录音
