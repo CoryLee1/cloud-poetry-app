@@ -25,8 +25,28 @@ const upload = multer({
 
 // OpenAI 客户端
 const openai = new OpenAI({
-  apiKey: config.OPENAI_API_KEY
+  apiKey: config.OPENAI_API_KEY,
+  dangerouslyAllowBrowser: true // 允许在浏览器中使用
 });
+
+// 验证API Key格式
+function validateApiKey(apiKey) {
+  if (!apiKey) {
+    return { valid: false, error: 'API Key未设置' };
+  }
+  
+  // 检查API Key格式
+  if (!apiKey.startsWith('sk-')) {
+    return { valid: false, error: 'API Key格式不正确，应以sk-开头' };
+  }
+  
+  // 检查API Key长度
+  if (apiKey.length < 20) {
+    return { valid: false, error: 'API Key长度不正确' };
+  }
+  
+  return { valid: true };
+}
 
 // 静态文件服务
 app.get('/', (req, res) => {
@@ -83,9 +103,18 @@ app.post('/api/generate-poetry', async (req, res) => {
       return res.status(400).json({ error: '请提供心情描述' });
     }
 
-    if (!config.OPENAI_API_KEY || config.OPENAI_API_KEY === 'your_openai_api_key_here') {
-      return res.status(500).json({ error: '请先在.env文件中设置OPENAI_API_KEY' });
+    // 验证API Key
+    const apiKeyValidation = validateApiKey(config.OPENAI_API_KEY);
+    if (!apiKeyValidation.valid) {
+      console.error('API Key验证失败:', apiKeyValidation.error);
+      return res.status(500).json({ 
+        error: 'API Key配置错误: ' + apiKeyValidation.error,
+        details: '请检查Railway环境变量中的OPENAI_API_KEY设置'
+      });
     }
+
+    console.log('🔑 API Key验证通过，开始生成诗歌...');
+    console.log('📝 用户心情:', mood);
 
     // 使用prompt管理器获取诗歌生成prompt
     const poetryPrompt = promptManager.getPoetryPrompt(mood);
@@ -118,12 +147,28 @@ app.post('/api/generate-poetry', async (req, res) => {
       words: words,
       mood: mood
     });
-
+    
   } catch (error) {
     console.error('生成诗歌错误:', error);
+    
+    // 详细的错误信息
+    let errorMessage = '生成诗歌失败';
+    if (error.code === 'APIConnectionError') {
+      errorMessage = '网络连接错误，请检查网络连接';
+    } else if (error.code === 'APIAuthenticationError') {
+      errorMessage = 'API认证失败，请检查API Key';
+    } else if (error.code === 'APIPermissionError') {
+      errorMessage = 'API权限不足';
+    } else if (error.code === 'APIRateLimitError') {
+      errorMessage = 'API请求频率过高，请稍后重试';
+    } else if (error.code === 'APIQuotaError') {
+      errorMessage = 'API配额已用完';
+    }
+    
     res.status(500).json({ 
-      error: '生成诗歌失败',
-      details: error.message 
+      error: errorMessage,
+      details: error.message,
+      code: error.code
     });
   }
 });
