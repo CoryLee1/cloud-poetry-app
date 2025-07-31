@@ -25,7 +25,7 @@ const upload = multer({
 
 // OpenAI 客户端
 const openai = new OpenAI({
-  apiKey: config.OPENAI_API_KEY,
+  apiKey: config.OPENAI_API_KEY?.trim(), // 去除可能的空格
   dangerouslyAllowBrowser: true // 允许在浏览器中使用
 });
 
@@ -35,17 +35,25 @@ function validateApiKey(apiKey) {
     return { valid: false, error: 'API Key未设置' };
   }
   
+  // 去除空格和换行符
+  const cleanApiKey = apiKey.trim();
+  
   // 检查API Key格式
-  if (!apiKey.startsWith('sk-')) {
+  if (!cleanApiKey.startsWith('sk-')) {
     return { valid: false, error: 'API Key格式不正确，应以sk-开头' };
   }
   
   // 检查API Key长度
-  if (apiKey.length < 20) {
+  if (cleanApiKey.length < 20) {
     return { valid: false, error: 'API Key长度不正确' };
   }
   
-  return { valid: true };
+  // 检查是否包含特殊字符
+  if (/[^\w\-]/.test(cleanApiKey)) {
+    return { valid: false, error: 'API Key包含非法字符' };
+  }
+  
+  return { valid: true, cleanKey: cleanApiKey };
 }
 
 // 静态文件服务
@@ -116,10 +124,16 @@ app.post('/api/generate-poetry', async (req, res) => {
     console.log('🔑 API Key验证通过，开始生成诗歌...');
     console.log('📝 用户心情:', mood);
 
+    // 使用清理后的API Key创建新的OpenAI客户端
+    const cleanOpenAI = new OpenAI({
+      apiKey: apiKeyValidation.cleanKey,
+      dangerouslyAllowBrowser: true
+    });
+
     // 使用prompt管理器获取诗歌生成prompt
     const poetryPrompt = promptManager.getPoetryPrompt(mood);
 
-    const completion = await openai.chat.completions.create({
+    const completion = await cleanOpenAI.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [
         {
