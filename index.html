@@ -1,12 +1,23 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta charset="utf-8" />
-    <link rel="stylesheet" href="globals.css" />
-    <link rel="stylesheet" href="styleguide.css" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="msapplication-tap-highlight" content="no" />
     <link rel="stylesheet" href="style.css" />
     <script src="api-services.js"></script>
+    <!-- p5.js 库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <!-- 诗歌落下效果脚本 -->
+    <script src="falling-words.js"></script>
+    
+    <!-- 背景音乐 -->
+    <audio id="bgMusic" loop>
+        <source src="bgm/yeule vv.mp3" type="audio/mpeg">
+    </audio>
   </head>
   <body>
     <div class="screen" data-model-id="43:3828">
@@ -79,6 +90,7 @@
               <img class="vector-11" src="img/vector-5.svg" />
             </div>
           </div>
+          
         </div>
       </div>
     </div>
@@ -93,230 +105,128 @@
     </script>
 
     <script type="module">
-        import * as THREE from 'three';
-        import { OrbitControls } from './src/utils/jsm/controls/OrbitControls.js';
-        import { ImprovedNoise } from './src/utils/jsm/math/ImprovedNoise.js';
+        import cloudScene from './three-scene.js';
 
-        let renderer, scene, camera;
-        let mesh;
+        // 初始化Three.js场景
+        cloudScene.init();
 
-        init();
+        // 窗口大小改变时重新调整
+        window.addEventListener('resize', () => {
+            cloudScene.resize();
+        });
 
-        function init() {
-            // Three.js 初始化
-            const canvas = document.getElementById('three-canvas');
-            renderer = new THREE.WebGLRenderer({ 
-                canvas, 
-                alpha: true,
-                antialias: true,
-                preserveDrawingBuffer: false
-            });
-            renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.setSize(375, 801);
-            renderer.setAnimationLoop(animate);
+        // 背景音乐控制
+        const bgMusic = document.getElementById('bgMusic');
+        let isMusicStarted = false;
 
-            scene = new THREE.Scene();
-
-            camera = new THREE.PerspectiveCamera(60, 375 / 801, 0.1, 100);
-            camera.position.set(0, 0, 1.5);
-
-            // 添加OrbitControls - 让云朵可以交互
-            const controls = new OrbitControls(camera, canvas);
-            controls.enableZoom = false; // 禁用缩放
-            controls.enablePan = false;  // 禁用平移
-            controls.enableDamping = true; // 启用阻尼效果
-            controls.dampingFactor = 0.05;
-
-            // 添加天空球
-            const skyCanvas = document.createElement('canvas');
-            skyCanvas.width = 1;
-            skyCanvas.height = 32;
-
-            const context = skyCanvas.getContext('2d');
-            const gradient = context.createLinearGradient(0, 0, 0, 32);
-            gradient.addColorStop(0.0, '#014a84');
-            gradient.addColorStop(0.5, '#0561a0');
-            gradient.addColorStop(1.0, '#437ab6');
-            context.fillStyle = gradient;
-            context.fillRect(0, 0, 1, 32);
-
-            const skyMap = new THREE.CanvasTexture(skyCanvas);
-            skyMap.colorSpace = THREE.SRGBColorSpace;
-
-            const sky = new THREE.Mesh(
-                new THREE.SphereGeometry(10),
-                new THREE.MeshBasicMaterial({ map: skyMap, side: THREE.BackSide })
-            );
-            scene.add(sky);
-
-            // 创建云朵纹理
-            const size = 128;
-            const data = new Uint8Array(size * size * size);
-
-            let i = 0;
-            const scale = 0.05;
-            const perlin = new ImprovedNoise();
-            const vector = new THREE.Vector3();
-
-            for (let z = 0; z < size; z++) {
-                for (let y = 0; y < size; y++) {
-                    for (let x = 0; x < size; x++) {
-                        const d = 1.0 - vector.set(x, y, z).subScalar(size / 2).divideScalar(size).length();
-                        data[i] = (128 + 128 * perlin.noise(x * scale / 1.5, y * scale, z * scale / 1.5)) * d * d;
-                        i++;
-                    }
-                }
-            }
-
-            const texture = new THREE.Data3DTexture(data, size, size, size);
-            texture.format = THREE.RedFormat;
-            texture.minFilter = THREE.LinearFilter;
-            texture.magFilter = THREE.LinearFilter;
-            texture.unpackAlignment = 1;
-            texture.needsUpdate = true;
-
-            // 着色器代码
-            const vertexShader = /* glsl */`
-                in vec3 position;
-                uniform mat4 modelMatrix;
-                uniform mat4 modelViewMatrix;
-                uniform mat4 projectionMatrix;
-                uniform vec3 cameraPos;
-                out vec3 vOrigin;
-                out vec3 vDirection;
-
-                void main() {
-                    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-                    vOrigin = vec3(inverse(modelMatrix) * vec4(cameraPos, 1.0)).xyz;
-                    vDirection = position - vOrigin;
-                    gl_Position = projectionMatrix * mvPosition;
-                }
-            `;
-
-            const fragmentShader = /* glsl */`
-                precision highp float;
-                precision highp sampler3D;
-
-                uniform mat4 modelViewMatrix;
-                uniform mat4 projectionMatrix;
-
-                in vec3 vOrigin;
-                in vec3 vDirection;
-
-                out vec4 color;
-
-                uniform vec3 base;
-                uniform sampler3D map;
-
-                uniform float threshold;
-                uniform float range;
-                uniform float opacity;
-                uniform float steps;
-                uniform float frame;
-
-                uint wang_hash(uint seed) {
-                    seed = (seed ^ 61u) ^ (seed >> 16u);
-                    seed *= 9u;
-                    seed = seed ^ (seed >> 4u);
-                    seed *= 0x27d4eb2du;
-                    seed = seed ^ (seed >> 15u);
-                    return seed;
-                }
-
-                float randomFloat(inout uint seed) {
-                    return float(wang_hash(seed)) / 4294967296.;
-                }
-
-                vec2 hitBox(vec3 orig, vec3 dir) {
-                    const vec3 box_min = vec3(-0.5);
-                    const vec3 box_max = vec3(0.5);
-                    vec3 inv_dir = 1.0 / dir;
-                    vec3 tmin_tmp = (box_min - orig) * inv_dir;
-                    vec3 tmax_tmp = (box_max - orig) * inv_dir;
-                    vec3 tmin = min(tmin_tmp, tmax_tmp);
-                    vec3 tmax = max(tmin_tmp, tmax_tmp);
-                    float t0 = max(tmin.x, max(tmin.y, tmin.z));
-                    float t1 = min(tmax.x, min(tmax.y, tmax.z));
-                    return vec2(t0, t1);
-                }
-
-                float sample1(vec3 p) {
-                    return texture(map, p).r;
-                }
-
-                float shading(vec3 coord) {
-                    float step = 0.01;
-                    return sample1(coord + vec3(-step)) - sample1(coord + vec3(step));
-                }
-
-                vec4 linearToSRGB(in vec4 value) {
-                    return vec4(mix(pow(value.rgb, vec3(0.41666)) * 1.055 - vec3(0.055), value.rgb * 12.92, vec3(lessThanEqual(value.rgb, vec3(0.0031308)))), value.a);
-                }
-
-                void main() {
-                    vec3 rayDir = normalize(vDirection);
-                    vec2 bounds = hitBox(vOrigin, rayDir);
-
-                    if (bounds.x > bounds.y) discard;
-
-                    bounds.x = max(bounds.x, 0.0);
-
-                    vec3 p = vOrigin + bounds.x * rayDir;
-                    vec3 inc = 1.0 / abs(rayDir);
-                    float delta = min(inc.x, min(inc.y, inc.z));
-                    delta /= steps;
-
-                    uint seed = uint(gl_FragCoord.x) * uint(1973) + uint(gl_FragCoord.y) * uint(9277) + uint(frame) * uint(26699);
-                    vec3 size = vec3(textureSize(map, 0));
-                    float randNum = randomFloat(seed) * 2.0 - 1.0;
-                    p += rayDir * randNum * (1.0 / size);
-
-                    vec4 ac = vec4(base, 0.0);
-
-                    for (float t = bounds.x; t < bounds.y; t += delta) {
-                        float d = sample1(p + 0.5);
-                        d = smoothstep(threshold - range, threshold + range, d) * opacity;
-                        float col = shading(p + 0.5) * 3.0 + ((p.x + p.y) * 0.25) + 0.2;
-                        ac.rgb += (1.0 - ac.a) * d * col;
-                        ac.a += (1.0 - ac.a) * d;
-                        if (ac.a >= 0.95) break;
-                        p += rayDir * delta;
-                    }
-
-                    color = linearToSRGB(ac);
-                    if (color.a == 0.0) discard;
-                }
-            `;
-
-            const geometry = new THREE.BoxGeometry(1, 1, 1);
-            const material = new THREE.RawShaderMaterial({
-                glslVersion: THREE.GLSL3,
-                uniforms: {
-                    base: { value: new THREE.Color(0x798aa0) },
-                    map: { value: texture },
-                    cameraPos: { value: new THREE.Vector3() },
-                    threshold: { value: 0.25 },
-                    opacity: { value: 0.25 },
-                    range: { value: 0.1 },
-                    steps: { value: 100 },
-                    frame: { value: 0 }
-                },
-                vertexShader,
-                fragmentShader,
-                side: THREE.BackSide,
-                transparent: true
+        // 多种方式触发音乐播放
+        function initBackgroundMusic() {
+            // 1. 页面加载完成后尝试播放
+            window.addEventListener('load', () => {
+                startBackgroundMusic();
             });
 
-            mesh = new THREE.Mesh(geometry, material);
-            scene.add(mesh);
+            // 2. 用户交互后播放（解决浏览器自动播放限制）
+            const interactionEvents = ['click', 'touchstart', 'keydown', 'mousedown'];
+            interactionEvents.forEach(event => {
+                document.addEventListener(event, () => {
+                    if (!isMusicStarted) {
+                        startBackgroundMusic();
+                    }
+                }, { once: true }); // 只触发一次
+            });
+
+            // 3. 页面可见性变化时播放
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden && !isMusicStarted) {
+                    startBackgroundMusic();
+                }
+            });
+
+            // 4. 延迟尝试播放
+            setTimeout(() => {
+                if (!isMusicStarted) {
+                    startBackgroundMusic();
+                }
+            }, 2000);
         }
 
-        function animate() {
-            mesh.material.uniforms.cameraPos.value.copy(camera.position);
-            mesh.rotation.y = -performance.now() / 7500;
-            mesh.material.uniforms.frame.value++;
-            renderer.render(scene, camera);
+        // 开始背景音乐
+        function startBackgroundMusic() {
+            if (isMusicStarted) return;
+            
+            bgMusic.volume = 0; // 初始音量为0
+            bgMusic.play().then(() => {
+                isMusicStarted = true;
+                console.log('背景音乐开始播放');
+                // 渐入效果
+                fadeInMusic();
+            }).catch(error => {
+                console.log('音乐播放失败，等待用户交互:', error);
+                // 如果失败，等待用户交互
+                document.addEventListener('click', () => {
+                    if (!isMusicStarted) {
+                        bgMusic.play().then(() => {
+                            isMusicStarted = true;
+                            console.log('用户交互后音乐开始播放');
+                            fadeInMusic();
+                        });
+                    }
+                }, { once: true });
+            });
         }
+
+        // 音乐渐入效果
+        function fadeInMusic() {
+            let volume = 0;
+            const targetVolume = 0.3; // 目标音量
+            const fadeDuration = 3000; // 渐入时间3秒
+            const fadeStep = targetVolume / (fadeDuration / 50); // 每50ms增加一次音量
+            
+            const fadeInterval = setInterval(() => {
+                volume += fadeStep;
+                if (volume >= targetVolume) {
+                    volume = targetVolume;
+                    clearInterval(fadeInterval);
+                }
+                bgMusic.volume = volume;
+            }, 50);
+        }
+
+        // 初始化音乐
+        initBackgroundMusic();
+
+        // 音乐状态指示器
+        function updateMusicStatus() {
+            const musicStatus = document.createElement('div');
+            musicStatus.id = 'musicStatus';
+            musicStatus.style.cssText = `
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                background: rgba(0, 0, 0, 0.7);
+                color: white;
+                padding: 5px 10px;
+                border-radius: 15px;
+                font-size: 12px;
+                z-index: 1000;
+                opacity: 0.8;
+            `;
+            musicStatus.textContent = isMusicStarted ? '🎵 音乐播放中' : '🔇 等待播放';
+            document.body.appendChild(musicStatus);
+
+            // 3秒后隐藏状态指示器
+            setTimeout(() => {
+                if (musicStatus.parentNode) {
+                    musicStatus.remove();
+                }
+            }, 3000);
+        }
+
+        // 页面加载后显示音乐状态
+        window.addEventListener('load', () => {
+            setTimeout(updateMusicStatus, 1000);
+        });
     </script>
 
     <!-- API交互脚本 -->
@@ -469,6 +379,16 @@
             setTimeout(() => {
                 imageElement.style.opacity = '1';
             }, 100);
+            
+            // 同时显示诗歌
+            const poetryDisplay = document.querySelector('.poetry-display');
+            if (poetryDisplay) {
+                poetryDisplay.style.display = 'block';
+                poetryDisplay.style.opacity = '0';
+                setTimeout(() => {
+                    poetryDisplay.style.opacity = '1';
+                }, 500); // 图片显示后0.5秒显示诗歌
+            }
         }
 
         // 显示诗歌
@@ -482,9 +402,10 @@
             // 获取.overlap容器（iPhone屏幕框架内）
             const overlapContainer = document.querySelector('.overlap');
 
-            // 创建诗歌显示元素
+            // 创建诗歌显示元素，但先隐藏
             const poetryDisplay = document.createElement('div');
             poetryDisplay.className = 'poetry-display';
+            poetryDisplay.style.display = 'none'; // 先隐藏
             poetryDisplay.innerHTML = `
                 <div class="poetry-text">${poetry}</div>
             `;
@@ -492,8 +413,12 @@
             // 添加到.overlap容器内部，确保在iPhone屏幕框架内
             overlapContainer.appendChild(poetryDisplay);
 
-            // 不再自动消失，让诗歌一直显示
-            // 用户可以通过点击其他地方或刷新页面来清除
+            // 启动p5.js诗歌落下效果，延迟更长时间让诗歌先显示
+            setTimeout(() => {
+                if (window.startFallingWords) {
+                    window.startFallingWords(poetry);
+                }
+            }, 3000); // 3秒后开始落下效果，让用户先看到诗歌
         }
 
         // 开始录音
