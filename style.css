@@ -89,6 +89,30 @@
   border-radius: 95.31px;
 }
 
+/* 动画相关样式 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+/* 初始状态 - 隐藏引导文本 */
 .screen .frame {
   display: inline-flex;
   flex-direction: column;
@@ -97,7 +121,85 @@
   position: absolute;
   top: 506px;
   left: 39px;
-  z-index: 10; /* 提高UI层级 */
+  z-index: 10;
+  opacity: 0; /* 初始透明 */
+  animation: fadeIn 1.5s ease-out 0.5s forwards; /* 0.5秒后开始淡入 */
+}
+
+/* 初始状态 - 隐藏输入框和天气 */
+.screen .frame-3 {
+  display: flex;
+  flex-direction: column;
+  width: 375px;
+  align-items: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  opacity: 0; /* 初始透明 */
+  animation: fadeIn 1s ease-out 2s forwards; /* 2秒后开始淡入 */
+}
+
+.screen .frame-6 {
+  display: flex;
+  width: 335px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 12px 12px 21px;
+  position: absolute;
+  top: 695px;
+  left: 20px;
+  background-color: #0000004c;
+  border-radius: 40px;
+  backdrop-filter: blur(25px) brightness(100%);
+  -webkit-backdrop-filter: blur(25px) brightness(100%);
+  z-index: 10;
+  opacity: 0; /* 初始透明 */
+  animation: fadeIn 1s ease-out 2.5s forwards; /* 2.5秒后开始淡入 */
+}
+
+/* 诗歌显示样式 */
+.poetry-display {
+  position: absolute;
+  top: 20%;
+  left: 30%;
+  transform: translate(30%, -30%);
+  background: transparent; /* 透明背景，不垫卡片 */
+  text-align: center;
+  z-index: 1000;
+  opacity: 0;
+  animation: fadeIn 1.5s ease-out forwards; /* 渐隐出现 */
+  max-width: 260px; /* 稍微窄一点，更居中 */
+  pointer-events: none; /* 不阻挡交互 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* 确保在.screen容器内居中 */
+  width: 100%;
+  height: 100%;
+}
+
+.poetry-display .poetry-text {
+  font-family: "PingFang SC-Regular", Helvetica; /* 改为细体 */
+  font-size: 12px; /* 字更小 */
+  line-height: 1.8;
+  color: #ffffff; /* 白色文字，和主UI一致 */
+  white-space: pre-line;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); /* 文字阴影，提高可读性 */
+  font-weight: 300; /* 细体 */
+  letter-spacing: 0.5px; /* 稍微增加字间距 */
+  text-align: center;
+}
+
+/* 移除关闭按钮，让诗歌自然消失 */
+.poetry-display .close-btn {
+  display: none;
+}
+
+/* 隐藏引导文本的动画 */
+.guide-text-fade-out {
+  animation: fadeOut 1s ease-out forwards !important;
 }
 
 .screen .frame-2 {
@@ -478,4 +580,24 @@
   height: 7px;
   top: 16px;
   left: 10px;
+}
+
+/* 生成图片样式 */
+.generated-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 375px;
+  height: 801px;
+  z-index: 5; /* 在Three.js云朵之上，UI元素之下 */
+  opacity: 0;
+  transition: opacity 2s ease-in-out;
+  pointer-events: none; /* 不阻挡交互 */
+}
+
+.generated-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0;
 }

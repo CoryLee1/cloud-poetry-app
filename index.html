@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="globals.css" />
     <link rel="stylesheet" href="styleguide.css" />
     <link rel="stylesheet" href="style.css" />
+    <script src="api-services.js"></script>
   </head>
   <body>
     <div class="screen" data-model-id="43:3828">
@@ -323,15 +324,21 @@
         // 获取元素
         const inputField = document.querySelector('.input-field');
         const voiceButton = document.querySelector('.view');
+        const guideText = document.querySelector('.frame'); // 引导文本
+        const weatherInfo = document.querySelector('.frame-3'); // 天气信息
+        const inputArea = document.querySelector('.frame-6'); // 输入区域
         let mediaRecorder = null;
         let audioChunks = [];
-
+        
         // 文本输入处理
         inputField.addEventListener('keypress', async (e) => {
             if (e.key === 'Enter') {
                 const mood = inputField.value.trim();
                 if (mood) {
-                    await generatePoetry(mood);
+                    // 先隐藏引导文本
+                    hideGuideText();
+                    // 然后生成诗歌
+                    await generatePoetryAndStartGame(mood);
                 }
             }
         });
@@ -349,8 +356,15 @@
             }
         });
 
-        // 生成诗歌
-        async function generatePoetry(mood) {
+        // 隐藏引导文本
+        function hideGuideText() {
+            if (guideText) {
+                guideText.classList.add('guide-text-fade-out');
+            }
+        }
+
+        // 生成诗歌并开始游戏
+        async function generatePoetryAndStartGame(mood) {
             try {
                 console.log('正在生成诗歌...', mood);
                 
@@ -366,8 +380,15 @@
                 
                 if (data.success) {
                     console.log('诗歌生成成功:', data.poetry);
-                    // 这里可以显示诗歌，或者进入游戏模式
-                    alert(`诗歌生成成功！\n\n${data.poetry}`);
+                    
+                    // 显示诗歌
+                    showPoetry(data.poetry);
+                    
+                    // 确保诗歌完全显示后再生成图片
+                    setTimeout(() => {
+                        console.log('开始生成图片，诗歌内容:', data.poetry);
+                        generateImageFromPoetry(data.poetry);
+                    }, 3000); // 增加到3秒，确保诗歌完全显示
                 } else {
                     console.error('生成诗歌失败:', data.error);
                     alert('生成诗歌失败: ' + data.error);
@@ -376,6 +397,103 @@
                 console.error('API调用错误:', error);
                 alert('网络错误，请重试');
             }
+        }
+
+        // 根据诗歌生成图片
+        async function generateImageFromPoetry(poetry) {
+            try {
+                console.log('正在根据诗歌生成图片...', poetry);
+                console.log('诗歌类型:', typeof poetry);
+                console.log('诗歌长度:', poetry ? poetry.length : 0);
+                
+                if (!poetry || poetry.trim() === '') {
+                    console.error('诗歌内容为空，无法生成图片');
+                    return;
+                }
+                
+                const requestBody = { 
+                    poetry: poetry // 确保传递诗歌内容
+                };
+                console.log('发送的请求体:', requestBody);
+                
+                const response = await fetch('/api/generate-image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                console.log('响应状态:', response.status);
+                const data = await response.json();
+                console.log('响应数据:', data);
+                
+                if (data.success) {
+                    console.log('图片生成成功:', data.imageUrl);
+                    console.log('使用的提示词:', data.prompt);
+                    
+                    // 显示生成的图片
+                    showGeneratedImage(data.imageUrl);
+                } else {
+                    console.error('生成图片失败:', data.error);
+                    // 不显示错误，静默失败
+                }
+            } catch (error) {
+                console.error('图片生成API调用错误:', error);
+                // 不显示错误，静默失败
+            }
+        }
+
+        // 显示生成的图片
+        function showGeneratedImage(imageUrl) {
+            // 移除已存在的图片
+            const existingImage = document.querySelector('.generated-image');
+            if (existingImage) {
+                existingImage.remove();
+            }
+
+            // 获取.overlap容器
+            const overlapContainer = document.querySelector('.overlap');
+
+            // 创建图片元素
+            const imageElement = document.createElement('div');
+            imageElement.className = 'generated-image';
+            imageElement.innerHTML = `
+                <img src="${imageUrl}" alt="生成的图片" />
+            `;
+
+            // 添加到.overlap容器内部
+            overlapContainer.appendChild(imageElement);
+
+            // 添加渐入动画
+            setTimeout(() => {
+                imageElement.style.opacity = '1';
+            }, 100);
+        }
+
+        // 显示诗歌
+        function showPoetry(poetry) {
+            // 移除已存在的诗歌显示
+            const existingPoetry = document.querySelector('.poetry-display');
+            if (existingPoetry) {
+                existingPoetry.remove();
+            }
+
+            // 获取.overlap容器（iPhone屏幕框架内）
+            const overlapContainer = document.querySelector('.overlap');
+
+            // 创建诗歌显示元素
+            const poetryDisplay = document.createElement('div');
+            poetryDisplay.className = 'poetry-display';
+            poetryDisplay.innerHTML = `
+                <div class="poetry-text">${poetry}</div>
+            `;
+
+            // 添加到.overlap容器内部，确保在iPhone屏幕框架内
+            overlapContainer.appendChild(poetryDisplay);
+
+            // 不再自动消失，让诗歌一直显示
+            // 用户可以通过点击其他地方或刷新页面来清除
         }
 
         // 开始录音
@@ -419,8 +537,10 @@
                 if (data.success) {
                     console.log('语音识别成功:', data.text);
                     inputField.value = data.text;
+                    // 隐藏引导文本
+                    hideGuideText();
                     // 自动生成诗歌
-                    await generatePoetry(data.text);
+                    await generatePoetryAndStartGame(data.text);
                 } else {
                     console.error('语音识别失败:', data.error);
                     alert('语音识别失败: ' + data.error);
